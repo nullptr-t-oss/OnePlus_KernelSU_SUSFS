@@ -82,6 +82,43 @@ runs:
           chmod +x "${REPO}"
         fi
         echo "REPO=${REPO}" >> "${GITHUB_ENV}"
+    
+    - name: Restore ddk cache
+      uses: actions/cache/restore@v5
+      with:
+        path: ${{ env.DIST_DIR }}
+        key: ddk-${{ env.MODEL }}-${{ env.OS_VERSION }}-${{ inputs.optimize_level }}
+
+    - name: Verify ddk cache
+      id: verify_ddk_cache
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        if [ -z "$(ls -A "${DIST_DIR}")" ]; then
+          echo "::error:: ddk cache is empty!"
+          echo "::error:: HINT: did you forget to run kernel workflow first?"
+
+          exit 1
+        fi
+
+         FILES=(
+          arch/arm64/boot/Image
+          vmlinux
+          vmlinux.symvers
+          System.map
+          modules.builtin
+          modules.builtin.modinfo
+        )
+
+        echo "Checking for ddk artifacts in ${DIST_DIR}"
+        for FILE in "${FILES[@]}"; do
+          set -x
+          if [[ ! -f "${DIST_DIR}/${FILE}" ]]; then
+            echo "WARNING: ${FILE} not found in ${DIST_DIR}" >&2
+          fi
+          set +x
+        done
 
     - name: Sync sources
       shell: bash
@@ -141,43 +178,6 @@ runs:
         [[ -n "${CLANG_DIR}" ]] || { echo "::error::No clang toolchain found"; exit 1; }
         echo "${CLANG_DIR}" >> "${GITHUB_PATH}"
         echo "::notice::using clang: ${CLANG_DIR}/clang"
-
-    - name: Restore ddk cache
-      uses: actions/cache/restore@v5
-      with:
-        path: ${{ env.DIST_DIR }}
-        key: ddk-${{ env.MODEL }}-${{ env.OS_VERSION }}-${{ inputs.optimize_level }}
-
-    - name: Verify ddk cache
-      id: verify_ddk_cache
-      shell: bash
-      run: |
-        set -euo pipefail
-
-        if [ -z "$(ls -A "${DIST_DIR}")" ]; then
-          echo "::error:: ddk cache is empty!"
-          echo "::info:: did you forget to run kernel workflow first?"
-
-          exit 1
-        fi
-
-         FILES=(
-          arch/arm64/boot/Image
-          vmlinux
-          vmlinux.symvers
-          System.map
-          modules.builtin
-          modules.builtin.modinfo
-        )
-
-        echo "Checking for ddk artifacts in ${DIST_DIR}"
-        for FILE in "${FILES[@]}"; do
-          set -x
-          if [[ ! -f "${DIST_DIR}/${FILE}" ]]; then
-            echo "WARNING: ${FILE} not found in ${DIST_DIR}" >&2
-          fi
-          set +x
-        done
 
     - name: Build kernel modules
       id: build
