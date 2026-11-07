@@ -2578,6 +2578,18 @@ runs:
         working_dir: "./main-source"
         compression_level: 6
 
+    - name: purge old ddk cache
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github_token }}
+      run: |
+        gh cache delete ddk-${{ env.OP_MODEL }}-${{ env.OP_OS_VERSION }}-${{ inputs.optimize_level }} || true
+
+    - name: ddk cache debug
+      shell: bash
+      run: |
+        echo -n "ddk artifacts: \n $(ls ${DIST_DIR})"
+
     - name: save ddk cache
       if: always() && steps.build_kernel_step.conclusion == 'success' && env.OP_DDK == 'true'
       uses: actions/cache/save@v5
