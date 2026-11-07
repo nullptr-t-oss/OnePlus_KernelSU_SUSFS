@@ -285,7 +285,7 @@ runs:
 
         if [[ -n "${{ inputs.build_config }}" ]]; then
           BUILD_CONFIG=$(mktemp)
-          curl -sfL ${{ inputs.build_config }} -o ${BUILD_CONFIG}
+          curl -sfL ${{ inputs.build_config }} | sed 's/\r$//' > ${BUILD_CONFIG}
 
           echo "inheriting build config (at ${BUILD_CONFIG})"
           . ${BUILD_CONFIG}
