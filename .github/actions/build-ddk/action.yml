@@ -387,13 +387,23 @@ runs:
         set +x
         _line
 
-        MAKE_GOALS=("modules_install")
+        # MAKE_GOALS=("modules_install")
         MODULES_STAGING_DIR="${OUT}/modules_staging"
+        mkdir -p "${MODULES_STAGING_DIR}"
 
-        echo " Installing kernel modules to staging directory"
-        set -x
-        ( cd "${OUT}" && make "${MAKE_FLAGS[@]}" O="${OUT}" INSTALL_MOD_STRIP=1 INSTALL_MOD_PATH="${MODULES_STAGING_DIR}" ${MAKE_GOALS[@]} )
-        set +x
+        # echo " Installing kernel modules to staging directory"
+        # set -x
+        # ( cd "${OUT}" && make "${MAKE_FLAGS[@]}" O="${OUT}" INSTALL_MOD_STRIP=1 INSTALL_MOD_PATH="${MODULES_STAGING_DIR}" ${MAKE_GOALS[@]} )
+        # set +x
+        # _line
+
+        echo " Staging built modules"
+        for GOAL in "${MAKE_GOALS[@]}"; do
+          KO="${OUT}/${GOAL}"
+          [[ -f "${KO}" ]] || { echo "::error::${GOAL} was not built"; exit 1; }
+          # same as INSTALL_MOD_STRIP=1
+          llvm-strip --strip-debug -o "${MODULES_STAGING_DIR}/$(basename "${KO}")" "${KO}"
+        done
         _line
 
 
