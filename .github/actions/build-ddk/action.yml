@@ -213,8 +213,8 @@ runs:
               CONFIGS=("${BASE_DEFCONFIG}")
             fi
 
-            if [[ -f "${ROOT_DIR}/${KERNEL_DIR}/arch/arm64/configs/vendor/${CODENAME}_GKI.config" ]]; then
-              CONFIGS+=("vendor/${CODENAME}_GKI.config")
+            if [[ -n "${CODENAME:-}" && -f "${ROOT_DIR}/${KERNEL_DIR}/arch/arm64/configs/vendor/${CODENAME:-}_GKI.config" ]]; then
+              CONFIGS+=("vendor/${CODENAME:-}_GKI.config")
             elif [[ -f "${ROOT_DIR}/${KERNEL_DIR}/arch/arm64/configs/vendor/${SOC}_GKI.config" ]]; then
               CONFIGS+=("vendor/${SOC}_GKI.config")
             fi
