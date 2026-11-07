@@ -315,6 +315,8 @@ runs:
 
         OUT="${OUT_DIR}/msm-kernel"
 
+        MAKE_GOALS=()
+
         # buid config hook to ovveride target modules to be built
         if [[ ! -v MODULE_TARGETS ]]; then
           MODULE_TARGETS=(
@@ -329,13 +331,18 @@ runs:
         for TARGET in "${MODULE_TARGETS[@]}"; do
           TARGET_DIR="${KERNEL_DIR}/$(dirname "${TARGET}")"
           set -x
-          if [[ -d "${TARGET_DIR}" ]] && grep -q "$(basename "${TARGET}" .ko)"'\.o' "${TARGET_DIR}/Makefile"; then
+          if [[ -d "${TARGET_DIR}" ]]; then
             MAKE_GOALS+=( ${TARGET} )
           else
             echo "WARNING: ${TARGET} not present!" >&2
           fi
           set +x
         done
+
+        if [[ ${#MAKE_GOALS[@]} -eq 0 ]]; then
+          echo "::error::none of the requested modules exist; refusing to run make with no goals"
+          exit 1
+        fi
 
         if [[ "${{ inputs.debug }}" = "true" ]]; then
           echo "make goals: ${MAKE_GOALS[@]}"
